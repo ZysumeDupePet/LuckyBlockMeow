@@ -1,0 +1,110 @@
+-- LocalScript (dán vào StarterPlayerScripts hoặc StarterGui)
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- ===== TẠO PANEL =====
+local panelGui = Instance.new("ScreenGui")
+panelGui.Name = "LuckyPanelGui"
+panelGui.ResetOnSpawn = false
+panelGui.Parent = playerGui
+
+local panelFrame = Instance.new("Frame")
+panelFrame.Name = "Panel"
+panelFrame.Size = UDim2.new(0, 220, 0, 60)
+panelFrame.Position = UDim2.new(0, 20, 1, -80) -- góc trái dưới, cách mép 20px
+panelFrame.AnchorPoint = Vector2.new(0, 0)
+panelFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+panelFrame.BorderSizePixel = 0
+panelFrame.Parent = panelGui
+
+-- Bo góc 20px
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 20)
+corner.Parent = panelFrame
+
+-- Nút Lucky x10
+local btn = Instance.new("TextButton")
+btn.Name = "LuckyButton"
+btn.Size = UDim2.new(1, -10, 1, -10)
+btn.Position = UDim2.new(0, 5, 0, 5)
+btn.BackgroundTransparency = 1
+btn.Text = "Lucky x10"
+btn.Font = Enum.Font.SourceSansBold
+btn.TextSize = 24
+btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+btn.Parent = panelFrame
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 1
+stroke.Transparency = 0.6
+stroke.Parent = panelFrame
+
+-- ===== GUI PHẦN TRĂM =====
+local percentGui = Instance.new("ScreenGui")
+percentGui.Name = "PercentCounterGui"
+percentGui.ResetOnSpawn = false
+percentGui.Parent = playerGui
+percentGui.Enabled = false -- ẩn mặc định
+
+local percentLabel = Instance.new("TextLabel")
+percentLabel.Name = "PercentLabel"
+percentLabel.Size = UDim2.new(0, 300, 0, 100)
+percentLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+percentLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+percentLabel.BackgroundTransparency = 1 -- không có nền đen
+percentLabel.Text = "0%"
+percentLabel.Font = Enum.Font.GothamBold
+percentLabel.TextSize = 48
+percentLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+percentLabel.Parent = percentGui
+percentLabel.ZIndex = 10
+
+-- ===== HÀM HIỂN THỊ ĐẾM % =====
+local function showPercent(durationSeconds)
+	if percentGui.Enabled then return end
+	percentGui.Enabled = true
+	percentLabel.TextTransparency = 0
+	percentLabel.Text = "0%"
+	
+	local startTime = tick()
+	local endTime = startTime + durationSeconds
+	
+	local conn
+	conn = RunService.RenderStepped:Connect(function()
+		local now = tick()
+		local t = (now - startTime) / durationSeconds
+		if t >= 1 then
+			percentLabel.Text = "100%"
+			conn:Disconnect()
+			
+			-- Nhấp nháy sau khi hoàn thành
+			local blinkCount = 3
+			local blinkTime = 0.18
+			for i = 1, blinkCount do
+				local tweenOut = TweenService:Create(percentLabel, TweenInfo.new(blinkTime), {TextTransparency = 1})
+				local tweenIn  = TweenService:Create(percentLabel, TweenInfo.new(blinkTime), {TextTransparency = 0})
+				tweenOut:Play()
+				tweenOut.Completed:Wait()
+				tweenIn:Play()
+				tweenIn.Completed:Wait()
+			end
+			
+			-- Ẩn sau khi xong
+			percentGui.Enabled = false
+		else
+			local percent = math.floor(t * 100 + 0.5)
+			percentLabel.Text = tostring(percent) .. "%"
+		end
+	end)
+end
+
+-- ===== SỰ KIỆN KHI NHẤN =====
+btn.MouseButton1Click:Connect(function()
+	showPercent(5)
+end)
+
+print("LuckyPanelGui loaded successfully.")
